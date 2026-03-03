@@ -54,7 +54,7 @@ app.post("/submit", upload.fields([
 
     await transporter.sendMail({
       from: '"Swag Form" <rajvip0409@gmail.com>',
-      to: "CLIENT_EMAIL@gmail.com",
+      to: process.env.CLIENT_EMAIL,
       subject: "rajvip0409@gmail.com",
       html: `
         <h3>New Submission</h3>
@@ -75,5 +75,6 @@ app.post("/submit", upload.fields([
 
 
 app.listen(5000, () => console.log("Server running on port 5000"));
+
 
 
