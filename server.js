@@ -52,18 +52,18 @@ app.post("/submit", upload.fields([
       });
     }
 
-    await transporter.sendMail({
-      from: `"Swag Form" <${process.env.EMAIL_USER}>`,
-      to: process.env.CLIENT_EMAIL,
-      subject: "rajvip0409@gmail.com",
-      html: `
-        <h3>New Submission</h3>
-        <p><b>Name:</b> ${req.body.name}</p>
-        <p><b>Email:</b> ${req.body.email}</p>
-        <p><b>Quantity:</b> ${req.body.quantity}</p>
-      `,
-      attachments: attachments
-    });
+ await transporter.sendMail({
+  from: `"Swag Form" <${process.env.EMAIL_USER}>`,
+  to: process.env.CLIENT_EMAIL,
+  subject: `New Submission from ${req.body.name}`,
+  html: `
+    <h3>New Submission</h3>
+    <p><b>Name:</b> ${req.body.name}</p>
+    <p><b>Email:</b> ${req.body.email}</p>
+    <p><b>Quantity:</b> ${req.body.quantity}</p>
+  `,
+  attachments: attachments
+});
 
     res.json({ success: true });
 
@@ -79,6 +79,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 
 
 
