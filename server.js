@@ -38,7 +38,7 @@ app.post("/submit", upload.fields([
 
     const attachments = [];
 
-    if (req.files.fileUpload) {
+    if (req.files?.fileUpload) {
       attachments.push({
         filename: req.files.fileUpload[0].originalname,
         path: req.files.fileUpload[0].path
@@ -75,3 +75,4 @@ app.post("/submit", upload.fields([
 
 
 app.listen(5000, () => console.log("Server running on port 5000"));
+
