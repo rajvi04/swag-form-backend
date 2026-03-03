@@ -53,7 +53,7 @@ app.post("/submit", upload.fields([
     }
 
     await transporter.sendMail({
-      from: '"Swag Form" <rajvip0409@gmail.com>',
+      from: `"Swag Form" <${process.env.EMAIL_USER}>`,
       to: process.env.CLIENT_EMAIL,
       subject: "rajvip0409@gmail.com",
       html: `
@@ -79,6 +79,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 
 
 
