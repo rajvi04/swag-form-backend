@@ -31,8 +31,8 @@ app.post("/submit", upload.fields([
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "rajvip0409@gmail.com",
-        pass: "siopyuhktihzfdne"
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
       }
     });
 
@@ -75,4 +75,5 @@ app.post("/submit", upload.fields([
 
 
 app.listen(5000, () => console.log("Server running on port 5000"));
+
 
