@@ -45,7 +45,7 @@ app.post("/submit", upload.fields([
       });
     }
 
-    if (req.files.sampleFile) {
+   if (req.files?.sampleFile) {
       attachments.push({
         filename: req.files.sampleFile[0].originalname,
         path: req.files.sampleFile[0].path
@@ -79,6 +79,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 
 
 
