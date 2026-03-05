@@ -13,40 +13,36 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* Create uploads folder if not exists */
+/* -------------------------------
+   Ensure uploads folder exists
+-------------------------------- */
+
 const uploadDir = path.join(__dirname, "uploads");
 
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-/* Multer Setup */
+/* -------------------------------
+   Multer setup
+-------------------------------- */
+
 const upload = multer({
   dest: uploadDir,
-  limits: { fileSize: 5 * 1024 * 1024 },
-
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = [
-      "application/pdf",
-      "image/jpeg",
-      "image/png",
-      "image/jpg"
-    ];
-
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only JPG PNG PDF allowed"));
-    }
-  }
+  limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-/* Test route */
+/* -------------------------------
+   Home Route
+-------------------------------- */
+
 app.get("/", (req, res) => {
   res.send("Server is running");
 });
 
-/* Form Submit API */
+/* -------------------------------
+   Form Submit Route
+-------------------------------- */
 
 app.post(
   "/submit",
@@ -56,11 +52,15 @@ app.post(
   ]),
   async (req, res) => {
     try {
+      /* respond immediately to frontend */
       res.json({ success: true });
 
-      console.log("Form submission received");
+      console.log("Form received");
 
-      /* SMTP transporter */
+      /* -------------------------------
+         Nodemailer Transporter
+      -------------------------------- */
+
       const transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
         port: 587,
@@ -69,82 +69,97 @@ app.post(
           user: process.env.GMAIL_USER,
           pass: process.env.GMAIL_PASS
         },
-        tls: { rejectUnauthorized: false },
+        tls: {
+          rejectUnauthorized: false
+        },
         family: 4
       });
 
-      /* Attachments */
+      /* -------------------------------
+         Attachments
+      -------------------------------- */
+
       const attachments = [];
 
-      const file1 = req.files?.fileUpload?.[0];
-      const file2 = req.files?.sampleFile?.[0];
-
-      if (file1) {
+      if (req.files?.fileUpload) {
         attachments.push({
-          filename: file1.originalname,
-          path: file1.path
+          filename: req.files.fileUpload[0].originalname,
+          path: req.files.fileUpload[0].path
         });
       }
 
-      if (file2) {
+      if (req.files?.sampleFile) {
         attachments.push({
-          filename: file2.originalname,
-          path: file2.path
+          filename: req.files.sampleFile[0].originalname,
+          path: req.files.sampleFile[0].path
         });
       }
 
-      /* Admin Email */
+      /* -------------------------------
+         Send Admin Email
+      -------------------------------- */
+
       await transporter.sendMail({
-        from: process.env.GMAIL_USER,
+        from: `"Swag Form" <${process.env.GMAIL_USER}>`,
         to: process.env.GMAIL_USER,
-        subject: "New Swag Form Submission",
-        text: `
-New Form Submission
+        subject: "New SWAG Form Submission",
+        html: `
+        <h2>New SWAG Form Submission</h2>
 
-Name: ${req.body.name || ""}
-Email: ${req.body.email || ""}
-Phone: ${req.body.phone || ""}
-Quantity: ${req.body.quantity || ""}
+        <p><b>Name:</b> ${req.body.name || ""}</p>
+        <p><b>Email:</b> ${req.body.email || ""}</p>
+        <p><b>Phone:</b> ${req.body.phone || ""}</p>
 
-Project Description: ${req.body["contact[Project Description]"] || ""}
-Product Details: ${req.body["contact[Product Details]"] || ""}
-Need Date: ${req.body["contact[Need Date]"] || ""}
-Logo: ${req.body["contact[Logo]"] || ""}
-Department: ${req.body["contact[Department]"] || ""}
-Site: ${req.body["contact[Site]"] || ""}
-Project Owner: ${req.body["contact[Project Owner]"] || ""}
+        <p><b>Project Description:</b> ${req.body.project_description || ""}</p>
+
+        <p><b>Quantity:</b> ${req.body.quantity || ""}</p>
+
+        <p><b>Need Date:</b> ${req.body.need_date || ""}</p>
+
+        <p><b>Department:</b> ${req.body.department || ""}</p>
+
+        <p><b>Site:</b> ${req.body.site || ""}</p>
+
+        <p><b>Project Owner:</b> ${req.body.project_owner || ""}</p>
         `,
         attachments: attachments
       });
 
-      /* Confirmation Email to User */
+      /* -------------------------------
+         Send confirmation email
+      -------------------------------- */
 
       if (req.body.email) {
         await transporter.sendMail({
           from: process.env.GMAIL_USER,
           to: req.body.email,
-          subject: "Thank You for Your Submission",
-          text:
-            "Thank you for submitting the Swag request form. Our team will review your request and contact you soon."
+          subject: "Thank you for your submission",
+          text: "We received your SWAG request successfully. Our team will contact you soon."
         });
       }
 
-      /* Delete uploaded files */
+      /* -------------------------------
+         Delete uploaded files
+      -------------------------------- */
 
       attachments.forEach(file => {
         fs.unlink(file.path, err => {
-          if (err) console.log("Delete error:", err);
+          if (err) console.log("File delete error:", err);
         });
       });
+
+      console.log("Email sent successfully");
     } catch (error) {
       console.error("UPLOAD ERROR:", error);
     }
   }
 );
 
-/* Start server */
+/* -------------------------------
+   Start Server
+-------------------------------- */
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
