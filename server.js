@@ -67,8 +67,8 @@ app.post(
         secure: false,
                 
          auth: {
-           user: process.env.EMAIL_USER,
-           pass: process.env.EMAIL_PASS
+           user: process.env.GMAIL_USER,
+           pass: process.env.GMAIL_PASS
          },
         tls: {
           rejectUnauthorized: false
@@ -165,4 +165,5 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 
