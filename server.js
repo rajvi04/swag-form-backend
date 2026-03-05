@@ -2,16 +2,18 @@ require("dotenv").config();
 
 const express = require("express");
 const multer = require("multer");
-const nodemailer = require("nodemailer");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+const { Resend } = require("resend");
 
 const app = express();
 
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /* -------------------------------
    Ensure uploads folder exists
@@ -33,7 +35,7 @@ const upload = multer({
 });
 
 /* -------------------------------
-   Home Route
+   Test Route
 -------------------------------- */
 
 app.get("/", (req, res) => {
@@ -52,28 +54,11 @@ app.post(
   ]),
   async (req, res) => {
     try {
-      /* respond immediately to frontend */
-      res.json({ success: true });
 
       console.log("Form received");
 
       /* -------------------------------
-         Nodemailer Transporter
-      -------------------------------- */
-
-       const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  family: 4
-});
-
-      /* -------------------------------
-         Attachments
+         Attachments (if uploaded)
       -------------------------------- */
 
       const attachments = [];
@@ -93,12 +78,12 @@ app.post(
       }
 
       /* -------------------------------
-         Send Admin Email
+         Send Email using Resend
       -------------------------------- */
 
-      await transporter.sendMail({
-        from: `"Swag Form" <${process.env.GMAIL_USER}>`,
-        to: process.env.GMAIL_USER,
+      await resend.emails.send({
+        from: "onboarding@resend.dev",
+        to: process.env.CLIENT_EMAIL,
         subject: "New SWAG Form Submission",
         html: `
         <h2>New SWAG Form Submission</h2>
@@ -108,7 +93,6 @@ app.post(
         <p><b>Phone:</b> ${req.body.phone || ""}</p>
 
         <p><b>Project Description:</b> ${req.body.project_description || ""}</p>
-
         <p><b>Quantity:</b> ${req.body.quantity || ""}</p>
 
         <p><b>Need Date:</b> ${req.body.need_date || ""}</p>
@@ -118,22 +102,8 @@ app.post(
         <p><b>Site:</b> ${req.body.site || ""}</p>
 
         <p><b>Project Owner:</b> ${req.body.project_owner || ""}</p>
-        `,
-        attachments: attachments
+        `
       });
-
-      /* -------------------------------
-         Send confirmation email
-      -------------------------------- */
-
-      if (req.body.email) {
-        await transporter.sendMail({
-          from: process.env.GMAIL_USER,
-          to: req.body.email,
-          subject: "Thank you for your submission",
-          text: "We received your SWAG request successfully. Our team will contact you soon."
-        });
-      }
 
       /* -------------------------------
          Delete uploaded files
@@ -145,9 +115,13 @@ app.post(
         });
       });
 
-      console.log("Email sent successfully");
+      res.json({ success: true });
+
     } catch (error) {
+
       console.error("UPLOAD ERROR:", error);
+      res.status(500).json({ error: "Email sending failed" });
+
     }
   }
 );
@@ -161,6 +135,3 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-
-
